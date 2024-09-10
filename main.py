@@ -50,7 +50,6 @@ time = Time()
 waiting_users = []
 
 
-
 #global variable for waiting for the  photo 
 is_waiting_for_photo = False
 #global variable for set chat id Profile changer
@@ -164,6 +163,15 @@ async def connect_chat_button(client, message):
     global waiting_users
     global is_waiting_for_photo, photo_chat_id , private_chats
 
+
+
+    # start commands /user for call user profile
+    if message.text.startswith("/user_"):
+        command_id = (message.text)[1:]
+        fetch_prof_of_show_id = (db_manager.fetch_user_id_of_show_id(command_id))[0][0]
+
+
+        await profile.profile_user(client, db_manager, message, Button, user_id = fetch_prof_of_show_id)
     # Review photo submission pending for profile change
     if is_waiting_for_photo and photo_chat_id == message.chat.id:
         try:
@@ -252,14 +260,6 @@ async def connect_chat_button(client, message):
     `از منوی پایین 👇 انتخاب کن`
     """,reply_markup=Button.menu_start())
     else:
-        
-        # start commands /user for call user profile
-        if message.text.startswith("/user_"):
-            command_id = (message.text)[1:]
-            fetch_prof_of_show_id = (db_manager.fetch_user_id_of_show_id(command_id))[0][0]
-
-
-            await profile.profile_user(client, db_manager, message, Button, user_id = fetch_prof_of_show_id)
 
         # Buttom chance connection
         if message.text == '🔗 به یه ناشناس وصلم کن!':
