@@ -43,6 +43,8 @@ profile = Profile()
 # Object save photo 
 photo = Photo()
 # Object datetimer 
+
+
 time = Time()
 
 
@@ -164,9 +166,8 @@ async def connect_chat_button(client, message):
     global is_waiting_for_photo, photo_chat_id , private_chats
 
 
-
     # start commands /user for call user profile
-    if message.text.startswith("/user_"):
+    if message.text and message.text.startswith("/user_"):
         command_id = (message.text)[1:]
         fetch_prof_of_show_id = (db_manager.fetch_user_id_of_show_id(command_id))[0][0]
 
@@ -231,8 +232,14 @@ async def connect_chat_button(client, message):
             if csv_manager.search_partner_id(message.chat.id):
                 #search partner id of chat id in csv file
                 partner_id = csv_manager.search_partner_id(message.chat.id)
+                #add user status to database (no chating)
+                db_manager.add_status_user(0, message.chat.id)
+                db_manager.add_status_user(0, partner_id)
+                
                 csv_manager.remove_chat_id_from_csv(message.chat.id)# remove chat id of csv file
                 csv_manager.remove_chat_id_from_csv(partner_id)# remove partner id of csv file
+
+                
 
                 # Notification to both users
                 await client.send_message(message.chat.id, "بلاکش میکنی یا بعدا وصل میشی باز", reply_markup=Button.menu_block())
@@ -264,7 +271,7 @@ async def connect_chat_button(client, message):
         # Buttom chance connection
         if message.text == '🔗 به یه ناشناس وصلم کن!':
             #update time login 
-            time.update_time_login(db_manager, message.chat.id)
+            time.update_time_login(db_manager, chat_id=message.chat.id)
             await message.reply_text("""
                             به کی وصلت کنم؟`👇انتخابکن`
     """,reply_markup=Button.menu_chatـrequest())
@@ -353,13 +360,20 @@ async def hande_callback_query(client, callback_query):
                     fetch_block_id = (db_manager.fetch_block_id(user_id))[0][0]#fetch bluck id of block table
                 except:
                     fetch_block_id = None
-
+            
+                #add user to chat with the partner
                 if not(fetch_block_id == partner_user_id) :
 
                     waiting_users.pop(0)
                     
                     csv_manager.add_to_data([chat_id, partner_id[0]])
                     csv_manager.add_to_data([partner_id[0], chat_id])
+
+                    #add user status to database (chating)
+                    db_manager.add_status_user(2, chat_id)
+                    db_manager.add_status_user(2, partner_id[0])
+
+
 
                     await client.send_message(chat_id, f"شما با کاربر  {partner_name}: متصل شدید.", reply_markup=Button.menu_show_pro_end_caht_active())
                     await client.send_message(partner_id[0], f"شما با کاربر {user_name} متصل شدید.", reply_markup=Button.menu_show_pro_end_caht_active())

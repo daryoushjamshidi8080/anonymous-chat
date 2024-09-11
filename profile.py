@@ -83,7 +83,7 @@ class Profile:
             # fetch show id of database
             show_id = (db_manager.fetch_show_id(user_id))[0][0]
 
-            if not(status == 3 ):
+            if not(status == 2 ):
                 last_logout_time = (db_manager.fetch_last_login_time(user_id))[0][0]
                 time_status = time.time_difference_from_now(last_logout_time)
                 time_result = None
@@ -115,7 +115,7 @@ class Profile:
                 photo_path = path_photo
 
             
-                await client.send_photo(
+            await client.send_photo(
                 message.chat.id,
                 photo=photo_path,
                 caption=f"""

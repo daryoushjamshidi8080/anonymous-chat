@@ -236,22 +236,21 @@ class DatabaseManager:
             print('Error in Fetch block id is:', e)
         finally:
             self.close()
-if __name__ == '__main__':
-    print('ok test fill')
 
-     # fetch path photo users
-    def fetch_path_photo(self, chat_id= None, user_id=None):
+    #add status user to database 
+    def add_status_user(self, value, chat_id):
         try:
             self.open()
-            if not(chat_id == None):
-                self.cur.execute('SELECT picture FROM users WHERE cach_id = %s', (chat_id,))
-            elif not(user_id == None):
-                self.cur.execute('SELECT picture FROM users WHERE user_id = %s', (user_id,))
-
-            resulte_data = self.cur.fetchall()
-            return resulte_data
-        
-        except Exception as e:
-            print('error in the fetch path photo is : ', e)
+            self.cur.execute('UPDATE users SET status = %s WHERE cach_id = %s', (value, chat_id))
+            self.conn.commit()
+        except Exception as e :
+            print('Error add status user to database is : ', e)
+            self.conn.rollback()
         finally:
             self.close()
+
+
+
+
+if __name__ == '__main__':
+    print('ok test fill')
