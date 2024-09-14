@@ -215,10 +215,10 @@ class DatabaseManager:
             self.close()
 
     # set id to block in blocklist table 
-    def set_id_to_block_list(self, value, user_id):
+    def set_id_to_block_list(self, block_id_user, user_id):
         try:
             self.open()
-            self.cur.execute("INSERT INTO blockedlist(block_id_user, user_id) VALUES (%s, %s)", (value, user_id))
+            self.cur.execute("INSERT INTO blockedlist(block_id_user, user_id) VALUES (%s, %s)", (block_id_user, user_id))
             self.conn.commit() 
         except Exception as e:
             print("Error in set block list table is:", e)
