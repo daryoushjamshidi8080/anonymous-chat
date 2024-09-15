@@ -338,7 +338,7 @@ async def hande_callback_query(client, callback_query):
         gender_user = user_data_profile[0][5]
     
         # Search again for the same model
-        if any(callback_query.message.chat.id == chat_id for chat_id, __ in list(dict_waiting_all.items()) ) :
+        if any(callback_query.message.chat.id == int(chat_id) for chat_id, __ in list(dict_waiting_all.items()) ) :
             await callback_query.message.reply_text('چند بار میزنی دارم جستوجو میکنم')
         elif csv_manager.is_chat_in_csv(callback_query.message.chat.id):
             await callback_query.message.reply_text('شما درحال چت هستین')

@@ -421,9 +421,14 @@ class SearchUsers:
 
         # If a user was expected in the list
         if dict_waiting_user_all:
-            for fist_item in list(dict_waiting_user_all.items()):
+            for first_item in list(dict_waiting_user_all.items()):
             
-                partner_id = int(fist_item[0])
+                partner_id = int(first_item[0])
+
+                
+                if chat_id_user == partner_id :
+                    continue
+
 
                 #fetch user user_id and  partner user_id
                 user_id = self.db_manager.fetch_user_id_of_users(chat_id_user)[0][0]
@@ -482,3 +487,4 @@ class SearchUsers:
     async def notify_waiting(self, client, user):
         await client.send_message(user, "شما در صف انتظار قرار گرفتید. لطفا منتظر بمانید.")
 
+        
