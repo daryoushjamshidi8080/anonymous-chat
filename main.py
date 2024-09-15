@@ -15,6 +15,8 @@ import datetime
 from datetimer import Time 
 from csv_manager import CSVManager
 from search_user import SearchUsers
+from message_manager import MessageManager
+from block_users import Blockusers
 
 
 # Database connection
@@ -49,6 +51,10 @@ photo = Photo()
 time = Time()
 # Object search users
 Search_users = SearchUsers(db_manager=db_manager)
+# Object Message Manager
+message_manager = MessageManager()
+# Object Block users
+block_user = Blockusers(db_manager=db_manager)
 
 
 # dictionary waiting usersall
@@ -259,13 +265,7 @@ async def connect_chat_button(client, message):
                 
             #add user to block list 
             if user_answer.text == 'بلاک کن' :
-
-                #user_id of user request
-                user_id = int((db_manager.fetch_user_id_of_users(message.chat.id))[0][0])
-                partner_user_id = int((db_manager.fetch_user_id_of_users(partner_id))[0][0])
-                
-                # set ids to table 
-                db_manager.set_id_to_block_list(partner_user_id, user_id)
+                await block_user.block_user(message ,partnaer_chat_id=partner_id, user_chat_id=message.chat.id)
 
                 
     elif not (message.text in ['🔗 به یه ناشناس وصلم کن!', '🚸 معرفی به دوستان (سکه رایگان)', '📬 انتقادات و پیشنهادات', '📩 لینک ناشناس من', '💰 سکه', '👤 پروفایل']):
@@ -327,9 +327,10 @@ async def connect_chat_button(client, message):
 async def hande_callback_query(client, callback_query):
 
     global is_waiting_for_photo, photo_chat_id, dict_waiting_all, dict_waiting_boy, dict_waiting_girl
+    chat_id = callback_query.message.chat.id # user chat id telegram
 
-    chat_id = callback_query.message.chat.id
 
+    #search anonymouse
     if callback_query.data == 'chancesearch':
 
         #fetch all profile user requeset
@@ -343,10 +344,10 @@ async def hande_callback_query(client, callback_query):
         elif csv_manager.is_chat_in_csv(callback_query.message.chat.id):
             await callback_query.message.reply_text('شما درحال چت هستین')
         else:
-            # Search girl 
+            # method search anonymouse
             await Search_users.search_users(client, [chat_id_user, gender_user], dict_waiting_all, dict_waiting_boy, dict_waiting_girl)
 
-
+    #search girl 
     elif callback_query.data == 'girlsearch':
 
         user_data_profile = db_manager.fetch_all_profile(chat_id=chat_id)
@@ -354,14 +355,15 @@ async def hande_callback_query(client, callback_query):
         gender_user = user_data_profile[0][5]
     
         # Search again for the same model
-        if any(callback_query.message.chat.id == chat_id for chat_id, __ in list(dict_waiting_girl.items()) ) :
+        if any(callback_query.message.chat.id == int(chat_id) for chat_id, __ in list(dict_waiting_girl.items()) ) :
             await callback_query.message.reply_text('چند بار میزنی دارم جستوجو میکنم')
         elif csv_manager.is_chat_in_csv(callback_query.message.chat.id):
             await callback_query.message.reply_text('شما درحال چت هستین')
         else:
-            # Search girl 
+            # method Search girls
             await Search_users.search_girl_user(client, [chat_id_user, gender_user], dict_waiting_girl, dict_waiting_boy, dict_waiting_all)
-        
+    
+    #search boys 
     elif callback_query.data == 'boysearch':
 
         user_data_profile = db_manager.fetch_all_profile(chat_id=chat_id)
@@ -369,13 +371,12 @@ async def hande_callback_query(client, callback_query):
         gender_user = user_data_profile[0][5]
     
         # Search again for the same model
-        if any(callback_query.message.chat.id == chat_id for chat_id, __ in list(dict_waiting_boy.items()) ) :
+        if any(callback_query.message.chat.id == int(chat_id) for chat_id, __ in list(dict_waiting_boy.items()) ) :
             await callback_query.message.reply_text('چند بار میزنی دارم جستوجو میکنم')
         elif csv_manager.is_chat_in_csv(callback_query.message.chat.id):
             await callback_query.message.reply_text('شما درحال چت هستین')
         else:
-            # Search girl 
-            print(dict_waiting_girl)
+            # method search boys
             await Search_users.search_boy_user(client, [chat_id_user, gender_user], dict_waiting_girl, dict_waiting_boy, dict_waiting_all)
             
 
@@ -488,6 +489,7 @@ async def hande_callback_query(client, callback_query):
     elif callback_query.data == 'picturechange':
         #update time login 
         time.update_time_login(db_manager,chat_id)
+
         if not is_waiting_for_photo :
             await callback_query.message.reply_text("عکس پروفایل جدید را ارسال کنید")
             is_waiting_for_photo = True
@@ -495,18 +497,32 @@ async def hande_callback_query(client, callback_query):
 
     # chat requestofuser for user
     elif callback_query.data == 'chatrequestofuser':
+
+        #send notefycation error 
         if csv_manager.is_chat_in_csv(callback_query.message.chat.id) :
             await callback_query.answer(
         text="باید چت قطع کنید برای استفاده از این بخش", 
         show_alert=True
         )
+            
     # button block user 
     elif callback_query.data == 'blockuser':
+
+        #send notefycation error 
         if csv_manager.is_chat_in_csv(callback_query.message.chat.id) :
             await callback_query.answer(
         text="باید چت قطع کنید برای استفاده از این بخش", 
         show_alert=True
         )
+        #fetch show id of caption
+        show_id = message_manager.fetch_show_id_of_caption(callback_query.message.caption)# show id point user
+        #fetch user id of show id 
+        point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
+
+        #method block user
+        await block_user.block_user(callback_query.message, partner_user_id= point_user_id, user_chat_id= callback_query.message.chat.id)
+
+            
     # send direct message for user
     elif callback_query.data == 'directmessage':
         if csv_manager.is_chat_in_csv(callback_query.message.chat.id):

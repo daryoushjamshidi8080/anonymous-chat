@@ -65,7 +65,7 @@ class SearchUsers:
                                 continue # skip to next partner if blocked
                         elif block_list_partner :
                             block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                            if partner_user_id in block_ids:
+                            if user_id in block_ids:
                                 continue # skip to next partner if blocked
                             
 
@@ -111,7 +111,7 @@ class SearchUsers:
                                 continue # skip to next partner if blocked
                         elif block_list_partner :
                             block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                            if partner_user_id in block_ids:
+                            if user_id in block_ids:
                                 continue # skip to next partner if blocked
 
                         #delete all list waiting  self user
@@ -163,7 +163,7 @@ class SearchUsers:
                                 continue # skip to next partner if blocked
                         elif block_list_partner :
                             block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                            if partner_user_id in block_ids:
+                            if user_id in block_ids:
                                 continue # skip to next partner if blocked
 
                         #delete all list waiting  self user
@@ -208,7 +208,7 @@ class SearchUsers:
                                 continue # skip to next partner if blocked
                         elif block_list_partner :
                             block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                            if partner_user_id in block_ids:
+                            if user_id in block_ids:
                                 continue # skip to next partner if blocked
 
                         #delete all list waiting  self user
@@ -267,7 +267,7 @@ class SearchUsers:
                                 continue # skip to next partner if blocked
                         elif block_list_partner :
                             block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                            if partner_user_id in block_ids:
+                            if user_id in block_ids:
                                 continue # skip to next partner if blocked
 
 
@@ -312,7 +312,7 @@ class SearchUsers:
                                 continue # skip to next partner if blocked
                         elif block_list_partner :
                             block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                            if partner_user_id in block_ids:
+                            if user_id in block_ids:
                                 continue # skip to next partner if blocked
 
 
@@ -344,7 +344,7 @@ class SearchUsers:
                 for chat_id, gender in dict_waiting_girl.items():
                     if gender == 0 and int(chat_id) != looking_chat_id:
                         partner_id = int(chat_id)
-
+                        
 
 
                         #fetch user user_id and  partner user_id
@@ -366,7 +366,7 @@ class SearchUsers:
                                 continue # skip to next partner if blocked
                         elif block_list_partner :
                             block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                            if partner_user_id in block_ids:
+                            if user_id in block_ids:
                                 continue # skip to next partner if blocked
 
                         
@@ -389,6 +389,29 @@ class SearchUsers:
                 for chat_id, gender in dict_waiting_all.items():
                     if gender == 0 and int(chat_id) != looking_chat_id:
                         partner_id = int(chat_id)
+
+
+                        #fetch user user_id and  partner user_id
+                        user_id = self.db_manager.fetch_user_id_of_users(looking_chat_id)[0][0]
+                        partner_user_id = self.db_manager.fetch_user_id_of_users(partner_id)[0][0]
+
+                        #fetch user ids block list user
+                        block_list_user = (self.db_manager.fetch_block_id(user_id))#fetch bluck id of block table
+                        
+                        #fetch user ids block list partner
+                        block_list_partner = (self.db_manager.fetch_block_id(partner_user_id))#fetch bluck id of block table
+                        
+
+
+                        #check is block partner
+                        if block_list_user:
+                            block_ids = {block_id[0] for block_id in block_list_user} # create set of block ids
+                            if partner_user_id in block_ids:
+                                continue # skip to next partner if blocked
+                        elif block_list_partner :
+                            block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
+                            if user_id in block_ids:
+                                continue # skip to next partner if blocked
 
                         #delete all list waiting  self user
                         self.delete_chat_id_of_list(str(looking_chat_id), dict_waiting_all, dict_waiting_boy, dict_waiting_girl)
@@ -449,7 +472,7 @@ class SearchUsers:
                         continue # skip to next partner if blocked
                 elif block_list_partner :
                     block_ids = {block_id[0] for block_id in block_list_partner} # create set of block ids
-                    if partner_user_id in block_ids:
+                    if user_id in block_ids:
                         continue # skip to next partner if blocked
 
 

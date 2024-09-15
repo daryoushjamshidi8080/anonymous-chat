@@ -214,7 +214,7 @@ class DatabaseManager:
         finally :
             self.close()
 
-    # set id to block in blocklist table 
+    # set id to block in blocklist table (block)
     def set_id_to_block_list(self, block_id_user, user_id):
         try:
             self.open()
@@ -234,6 +234,16 @@ class DatabaseManager:
             return resulte_data
         except Exception as e :
             print('Error in Fetch block id is:', e)
+        finally:
+            self.close()
+    # delete user id of block id (on block)
+    def on_block_user(self, user_id, block_id_user):
+        try:
+            self.open()
+            self.cur.execute("DELETE FROM blockedlist WHERE user_id = %s and block_id_user = %s", (user_id, block_id_user))
+            self.conn.commit()
+        except Exception as e :
+            print('Error in Delete id of block in blockedlist table is : ', e)
         finally:
             self.close()
 
