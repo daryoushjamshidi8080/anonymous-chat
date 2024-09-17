@@ -78,33 +78,6 @@ private_chats = []
 
 
 
-# @bot.on_message()
-# async def reply_to_reply(client, message):
-#     # بررسی اینکه پیام پاسخ به یک پیام دیگر است
-#     if message.reply_to_message:
-#         # ارسال پاسخ به پیام اصلی
-#         await message.reply("This is a reply to your reply!")
-#         await client.send_message(
-#     chat_id=message.chat.id,
-#     text="hello",
-#     reply_to_message_id=message.id
-# )
-
-# @bot.on_messasge(filters.text)
-# async def reply_to_text(client, message):
-#     # ارسال پاسخ به پیام‌های متنی که پاسخی به پیام‌های دیگر نیستند
-#     if not message.reply_to_message:
-#         await message.reply("Hello! I'm ready to reply.")
-
-
-
-
-
-
-
-
-
-
 # Object CSV file manager 
 csv_manager = CSVManager('/home/daryoush/Codes/chatAnonymous/connected_paris.csv')
 
