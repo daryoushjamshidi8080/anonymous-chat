@@ -382,12 +382,11 @@ class Button:
             ],resize_keyboard=True
         )
         return keyboard_button
-    # menu send request user to user 
-    def menu_send_request(self):
+    #menu send request user to user 
+    def menu_direct_message(self):
         inline_keybord = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton('درخواست چت', 'cathrequest')],
-                [InlineKeyboardButton('ارسال پیام', 'sendmessage')]
+                [InlineKeyboardButton('ارسال پاسخ', 'sendanswer'), InlineKeyboardButton('بلاک', 'blocksenddirect')]
             ]
         )
         return inline_keybord

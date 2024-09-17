@@ -29,7 +29,7 @@ class DatabaseManager:
         self.cur.close()
         self.conn.close()
 
-    #fetch Chat ID
+    #fetc first name of chat id 
     def fetch_chat_id(self, chat_id):
         try:
             self.open()
@@ -114,6 +114,17 @@ class DatabaseManager:
             return(results_data)
         except Exception as e :
             print(f'Error in fetch show id is : {e}')
+        finally:
+            self.close()
+    #fetch chat id of chat id in users table
+    def fetch_chat_id_of_user_id(self, user_id):
+        try:
+            self.open()
+            self.cur.execute("SELECT cach_id from users WHERE user_id = %s", (user_id,))
+            resualt_data = self.cur.fetchall()
+            return resualt_data
+        except Exception as e :
+            print("Error in fetch chat id of users table is : ", e)
         finally:
             self.close()
 

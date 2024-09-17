@@ -52,7 +52,7 @@ time = Time()
 # Object search users
 Search_users = SearchUsers(db_manager=db_manager)
 # Object Message Manager
-message_manager = MessageManager()
+message_manager = MessageManager(db_manager,Button)
 # Object Block users
 block_user = Blockusers(db_manager=db_manager)
 
@@ -384,6 +384,7 @@ async def hande_callback_query(client, callback_query):
         await callback_query.message.reply_text('بزودی')
     elif callback_query.data == 'homesearch' :
         await callback_query.message.reply_text('بزودی')
+
     # Go to edit profile
     elif callback_query.data == 'editprofile':
         #update time login 
@@ -505,24 +506,29 @@ async def hande_callback_query(client, callback_query):
         show_alert=True
         )
             
+        
     # button block user 
     elif callback_query.data == 'blockuser':
 
-        #send notefycation error 
+        # send notefycation error 
         if csv_manager.is_chat_in_csv(callback_query.message.chat.id) :
             await callback_query.answer(
         text="باید چت قطع کنید برای استفاده از این بخش", 
         show_alert=True
         )
-        #fetch show id of caption
-        show_id = message_manager.fetch_show_id_of_caption(callback_query.message.caption)# show id point user
-        #fetch user id of show id 
-        point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
+        else:
+
+            show_id = message_manager.fetch_show_id_of_caption(callback_query.message.caption)# show id point user
+                #fetch user id of show id 
+            point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
 
         #method block user
         await block_user.block_user(callback_query.message, partner_user_id= point_user_id, user_chat_id= callback_query.message.chat.id)
 
-            
+    elif callback_query.data == 'blocklist':
+        await callback_query.message.reply_text('بزودی...')
+
+
     # send direct message for user
     elif callback_query.data == 'directmessage':
         if csv_manager.is_chat_in_csv(callback_query.message.chat.id):
@@ -530,6 +536,17 @@ async def hande_callback_query(client, callback_query):
         text="باید چت قطع کنید برای استفاده از این بخش", 
         show_alert=True
         )
+        else:
+            #fetch show id of caption
+            show_id = message_manager.fetch_show_id_of_caption(callback_query.message.caption)# show id point user
+            #fetch user id of show id 
+            point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
+            chat_id = (db_manager.fetch_chat_id_of_user_id(point_user_id))[0][0]
+            await callback_query.message.reply_text('پیام خود را وارد بنویسد')
+            message = await response.respons_text(bot, chat_id)
+            await message_manager.send_message_direct(client, callback_query, point_user_id, message.text,callback_query.message.chat.id)
+            
+            
     # report partner
     elif callback_query.data == 'reportuser':
         if csv_manager.is_chat_in_csv(callback_query.message.chat.id):
@@ -537,6 +554,20 @@ async def hande_callback_query(client, callback_query):
         text="باید چت قطع کنید برای استفاده از این بخش", 
         show_alert=True
         )
-            
+    #block sender user direct
+    elif callback_query.data == 'blocksenddirect':
+            show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
+            print(show_id)
+    # Send a reply to Direct
+    elif callback_query.data == 'sendanswer':
+        #fetch show id of caption
+            show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
+            #fetch user id of show id 
+            point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
+            chat_id = (db_manager.fetch_chat_id_of_user_id(point_user_id))[0][0]
+            await callback_query.message.reply_text('پیام خود را وارد بنویسد')
+            message = await response.respons_text(bot, chat_id)
+            await message_manager.send_message_direct(client, callback_query, point_user_id, message.text,callback_query.message.chat.id)
+        
 
 bot.run()
