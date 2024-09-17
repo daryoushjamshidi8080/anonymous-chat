@@ -13,8 +13,40 @@ class MessageManager:
           return 'user_' + show_id
     
     #manage message for send 
-    def manage_massage(self, chat_id, partnare_id):
-         pass
+    async def manage_send_message(self, client, message, csv_manager):
+          
+           #search partner id of chat id is csv file
+            partner_id = int(csv_manager.search_partner_id(message.chat.id))
+
+            #Check if the message has been replicated to another message or not
+            if message.reply_to_message:
+                
+                # Get the user ID of the sender of the current message
+                current_user_id = message.from_user.id
+
+                # Getting the user ID of the sender of the replicated message
+                replied_user_id = message.reply_to_message.from_user.id
+
+                # Checking whether the user has replied to his own message or not
+                if current_user_id == replied_user_id:
+                    reply_to_message_id = message.reply_to_message.id + 1 if message.reply_to_message else None
+
+                else:
+                    reply_to_message_id = message.reply_to_message.id - 1 if message.reply_to_message else None
+            else:
+                reply_to_message_id = None
+
+            if message.text:
+                await client.send_message(partner_id, message.text, reply_to_message_id=reply_to_message_id)#message.reply_to_message_id)
+            elif message.animation:
+                await client.send_animation(partner_id, message.animation.file_id,protect_content=protect_content, reply_to_message_id=reply_to_message_id)
+            elif message.photo:
+                await client.send_photo(partner_id, message.photo.file_id, protect_content=protect_content , reply_to_message_id=reply_to_message_id)
+            elif message.sticker:
+                await client.send_sticker(partner_id, message.sticker.file_id, protect_content=protect_content, reply_to_message_id=reply_to_message_id )
+            elif message.video:
+                await client.send_video(partner_id, message.video.file_id, protect_content=protect_content, reply_to_message_id=reply_to_message_id )
+                
     
     # send message to direct user
     async def send_message_direct(self, client, callback_query, user_id, message, chat_id_sender):

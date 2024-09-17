@@ -75,6 +75,36 @@ photo_chat_id = None
 private_chats = []
 
 
+
+
+
+# @bot.on_message()
+# async def reply_to_reply(client, message):
+#     # بررسی اینکه پیام پاسخ به یک پیام دیگر است
+#     if message.reply_to_message:
+#         # ارسال پاسخ به پیام اصلی
+#         await message.reply("This is a reply to your reply!")
+#         await client.send_message(
+#     chat_id=message.chat.id,
+#     text="hello",
+#     reply_to_message_id=message.id
+# )
+
+# @bot.on_messasge(filters.text)
+# async def reply_to_text(client, message):
+#     # ارسال پاسخ به پیام‌های متنی که پاسخی به پیام‌های دیگر نیستند
+#     if not message.reply_to_message:
+#         await message.reply("Hello! I'm ready to reply.")
+
+
+
+
+
+
+
+
+
+
 # Object CSV file manager 
 csv_manager = CSVManager('/home/daryoush/Codes/chatAnonymous/connected_paris.csv')
 
@@ -211,20 +241,8 @@ async def connect_chat_button(client, message):
         if message.text in ['پایان چت', 'فعال سازی چت خصوصی', 'نمایش پروفایل', 'غیرفعال سازی چت خصوصی']:
             pass
         else:
-            #search partner id of chat id is csv file
-            partner_id = csv_manager.search_partner_id(message.chat.id)
-            if message.text:
-                await client.send_message(partner_id, message.text, protect_content=protect_content)
-            elif message.animation:
-                await client.send_animation(partner_id, message.animation.file_id,protect_content=protect_content)
-            elif message.photo:
-                await client.send_photo(partner_id, message.photo.file_id, protect_content=protect_content )
-            elif message.sticker:
-                await client.send_sticker(partner_id, message.sticker.file_id, protect_content=protect_content )
-            elif message.video:
-                await client.send_video(partner_id, message.video.file_id, protect_content=protect_content )
-                
-
+            # manage send message user
+            await message_manager.manage_send_message(client, message, csv_manager)
         # buttons chating 
         if text == 'نمایش پروفایل':
             #search partner id of chat id is csv file
@@ -558,6 +576,7 @@ async def hande_callback_query(client, callback_query):
     elif callback_query.data == 'blocksenddirect':
             show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
             print(show_id)
+
     # Send a reply to Direct
     elif callback_query.data == 'sendanswer':
         #fetch show id of caption
