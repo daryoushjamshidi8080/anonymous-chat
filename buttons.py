@@ -427,4 +427,13 @@ class Button:
             ],resize_keyboard=True
         )
         return inline_keyboard
+    #menu request chat  for user
+    def menu_request_chat(self):
+        inline_keyboard = InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton('قبول درخواست', 'acceptrequest'), InlineKeyboardButton('رد درخواست', 'rejectrequest')],
+                [InlineKeyboardButton('بلاک', 'blockrequest')]
+            ]
+        )
+        return inline_keyboard
     

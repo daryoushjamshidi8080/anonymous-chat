@@ -215,7 +215,7 @@ async def connect_chat_button(client, message):
             pass
         else:
             # manage send message user
-            await message_manager.manage_send_message(client, message, csv_manager)
+            await message_manager.manage_send_message(client, message, csv_manager, protect_content)
         # buttons chating 
         if text == 'نمایش پروفایل':
             #search partner id of chat id is csv file
@@ -487,7 +487,8 @@ async def hande_callback_query(client, callback_query):
             is_waiting_for_photo = True
             photo_chat_id = callback_query.message.chat.id #caht id Profile picture sender
 
-    # chat requestofuser for user
+
+     # send reques chat for user of profile
     elif callback_query.data == 'chatrequestofuser':
 
         #send notefycation error 
@@ -497,6 +498,26 @@ async def hande_callback_query(client, callback_query):
         show_alert=True
         )
             
+        else :
+            user_request_user_id = db_manager.fetch_user_id_of_users(callback_query.message.chat.id)[0][0]
+            user_request_show_id = db_manager.fetch_show_id(user_request_user_id)[0][0]
+
+            #fetch show id of caption
+            point_user_show_id = message_manager.fetch_show_id_of_caption(callback_query.message.caption)# show id point user
+
+            #fetch user id of show id 
+            point_user_id = db_manager.fetch_user_id_of_show_id(point_user_show_id)[0][0]
+            point_chat_id = db_manager.fetch_chat_id_of_user_id(point_user_id)[0][0]
+
+            #send request  to self
+            if point_chat_id == callback_query.message.chat.id :
+                await callback_query.answer(text='نمیتوانید به خودتون درخواست بدین باید به کاربر دیگری درخواستبفرستین', show_alert=True)
+            elif csv_manager.is_chat_in_csv( point_chat_id):
+                await callback_query.answer(text='درحال چت هست ', show_alert=True)
+            else:
+                #method send request to user for chat 
+                await message_manager.sned_request_caht(client, callback_query, point_user_id, point_chat_id, user_request_show_id, user_request_user_id)
+                    
         
     # button block user 
     elif callback_query.data == 'blockuser':
@@ -510,11 +531,19 @@ async def hande_callback_query(client, callback_query):
         else:
 
             show_id = message_manager.fetch_show_id_of_caption(callback_query.message.caption)# show id point user
-                #fetch user id of show id 
+            #fetch user id of show id 
             point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
 
-        #method block user
-        await block_user.block_user(callback_query.message, partner_user_id= point_user_id, user_chat_id= callback_query.message.chat.id)
+            #fetch chat id point user
+            point_chat_id = db_manager.fetch_chat_id_of_user_id(point_user_id)[0][0]
+            
+            if point_chat_id == callback_query.message.chat.id :
+                #send request  to self
+                await callback_query.answer(text='نمی توانید خودتان را بلاک کنید', show_alert=True)
+            else:
+
+                #method block user
+                await block_user.block_user(callback_query.message, partner_user_id= point_user_id, user_chat_id= callback_query.message.chat.id)
 
     elif callback_query.data == 'blocklist':
         await callback_query.message.reply_text('بزودی...')
@@ -532,10 +561,17 @@ async def hande_callback_query(client, callback_query):
             show_id = message_manager.fetch_show_id_of_caption(callback_query.message.caption)# show id point user
             #fetch user id of show id 
             point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
-            chat_id = (db_manager.fetch_chat_id_of_user_id(point_user_id))[0][0]
-            await callback_query.message.reply_text('پیام خود را وارد بنویسد')
-            message = await response.respons_text(bot, chat_id)
-            await message_manager.send_message_direct(client, callback_query, point_user_id, message.text,callback_query.message.chat.id)
+            point_user_chat_id = (db_manager.fetch_chat_id_of_user_id(point_user_id))[0][0]
+
+            if point_user_chat_id == callback_query.message.chat.id :
+                await callback_query.answer(
+                    text='نمی توانید به خودتان دایرکت بفرستید',
+                    show_alert=True
+                )
+            else:
+                await callback_query.message.reply_text('پیام خود را وارد بنویسد')
+                message = await response.respons_text(bot, point_user_chat_id)
+                await message_manager.send_message_direct(client, callback_query, point_user_id, message.text,callback_query.message.chat.id)
             
             
     # report partner
@@ -545,21 +581,65 @@ async def hande_callback_query(client, callback_query):
         text="باید چت قطع کنید برای استفاده از این بخش", 
         show_alert=True
         )
+            
+
     #block sender user direct
     elif callback_query.data == 'blocksenddirect':
-            show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
-            print(show_id)
+        show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
+        #fetch user id of show id 
+        point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
+
+        #method block user
+        await block_user.block_user(callback_query.message, partner_user_id= point_user_id, user_chat_id= callback_query.message.chat.id)
+
 
     # Send a reply to Direct
     elif callback_query.data == 'sendanswer':
         #fetch show id of caption
-            show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
-            #fetch user id of show id 
-            point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
-            chat_id = (db_manager.fetch_chat_id_of_user_id(point_user_id))[0][0]
-            await callback_query.message.reply_text('پیام خود را وارد بنویسد')
-            message = await response.respons_text(bot, chat_id)
-            await message_manager.send_message_direct(client, callback_query, point_user_id, message.text,callback_query.message.chat.id)
+        show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
+        #fetch user id of show id 
+        point_user_id = db_manager.fetch_user_id_of_show_id(show_id)[0][0]
+        point_user_chat_id = (db_manager.fetch_chat_id_of_user_id(point_user_id))[0][0]
+        
+        await callback_query.message.reply_text('پیام خود را وارد بنویسد')
+        message = await response.respons_text(bot, point_user_chat_id)#Waiting for a reply user
+
+        # methode send message for direct 
+        await message_manager.send_message_direct(client, callback_query, point_user_id, message.text,callback_query.message.chat.id)
+        
+    elif callback_query.data == 'blockrequest':
+
+        point_user_show_id = message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
+        
+        #fetch user id of show id 
+        point_user_id= db_manager.fetch_user_id_of_show_id(point_user_show_id)[0][0]
+
+        #method block user
+        await block_user.block_user(callback_query.message, partner_user_id= point_user_id, user_chat_id= callback_query.message.chat.id)
+
+
+    # accept request chat at point user
+    elif callback_query.data == 'acceptrequest':
+
+        point_user_show_id =message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
+
+        #fetch user id of show id 
+        point_user_id= db_manager.fetch_user_id_of_show_id(point_user_show_id)[0][0]
+        point_user_chat_id = db_manager.fetch_chat_id_of_user_id(point_user_id)[0][0]
+        
+        #send notifiycation for user sender 
+        if csv_manager.is_chat_in_csv(point_user_chat_id):
+            await callback_query.answer(text=' درحال چت هست نمی توانید به شما وصل شود', show_alert= True)
+
+        else:
+        
+            await message_manager.accept_request_chat(client, callback_query.message.chat.id, point_user_chat_id)
+
+
+    
+        
+
+
         
 
 bot.run()
