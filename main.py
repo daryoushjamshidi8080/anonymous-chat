@@ -636,6 +636,19 @@ async def hande_callback_query(client, callback_query):
             await message_manager.accept_request_chat(client, callback_query.message.chat.id, point_user_chat_id)
 
 
+    # Rejection of the request
+    elif callback_query.data == 'rejectrequest':
+                
+        point_user_show_id =message_manager.fetch_show_id_of_caption(callback_query.message.text)# show id point user
+
+        #fetch user id of show id 
+        point_user_id= db_manager.fetch_user_id_of_show_id(point_user_show_id)[0][0]
+        point_user_chat_id = db_manager.fetch_chat_id_of_user_id(point_user_id)[0][0]
+
+        await message_manager.reject_request(client, callback_query, point_user_chat_id, callback_query.message.chat.id)
+        
+
+
     
         
 

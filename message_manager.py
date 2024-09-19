@@ -106,14 +106,18 @@ class MessageManager:
      #accept request chat at point user
      async def accept_request_chat(self, client, request_chat_id, point_user_chatid):
 
-          
-
-
           # Add chat IDs connected to csv file
           self.csv_manager.add_to_data([request_chat_id, point_user_chatid])
           self.csv_manager.add_to_data([point_user_chatid, request_chat_id])
           
           # User connection function
           await self.search_user.connect_users(client, request_chat_id, point_user_chatid)
+          
+     async def reject_request(self, client,  callback_query, sender_chat_id, point_caht_id):
+          
+          await client.send_message(sender_chat_id, f'درخواست شمارو {point_caht_id}رد کرد')
+          print(callback_query)
+          await client.delete_messages(chat_id=point_caht_id, message_ids=callback_query.message.id)
+
 
           
