@@ -233,4 +233,15 @@ class MessageManager:
 #{sender_user_id}
 ''', reply_markup=self.button.menu_respons_to_anonymus())
 
+     #method send message for support 
+     async def support(self, client, message, sender_show_id):
+            await message.reply_text('مستقیم با ادمین در ارتباط هستین')
+            message_text = await response.respons_text(client, message.chat.id)
 
+            await client.send_message(1655307519, f'''
+                پیام انتقاد
+                                        show id منتقد: {sender_show_id}
+                                        chat id منتقد: {message.chat.id}
+                                        messeage منتقد : {message_text.text}
+            ''')
+            await message.reply_text('بزودی پاخ خود را دریافت خواهید کرد از طرف ادمین')

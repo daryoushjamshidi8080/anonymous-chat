@@ -101,9 +101,23 @@ async def main(client, message):
         point_show_id = message.command[1] # show id point user
         sender_chat_id = message.chat.id # chat id sender user
 
-        await message_manager.send_anonymous_message(client, sender_chat_id, point_show_id)
+        await message_manager.send_anonymous_message(client, sender_chat_id, point_show_id)#method send message anonymous
+        
     elif command_anonymous:
-        pass
+        sender_chat_id =  message.chat.id
+        point_show_id = message.command[1] # show id point user
+
+        #defult create new profile for user
+        name = 'پچ پچ چت'
+        gender = 'boy'
+        age = 0
+
+        
+        
+        await message_manager.send_anonymous_message(client, sender_chat_id, point_show_id)#method send message anonymous
+        await message.reply_text('''برای استفاده بیشتر از این ربات پروفایل خودرا تکمیل کنید
+                                 `درصپوت تکمیل نکردن در جستجوی ها به مشکل میخورید`
+                                 ''')
     #start bot  
     elif return_id:
         await message.reply_text(f"""
@@ -264,8 +278,13 @@ async def connect_chat_button(client, message):
         elif text == '📬 انتقادات و پیشنهادات':
             #update time login 
             time.update_time_login(db_manager, message.chat.id)
-            await message.reply_text("""support""")
-            # ارسال پیام اخطار
+
+            #fetch show id sender 
+            sender_user_id =db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
+            sender_show_id = db_manager.fetch_show_id(sender_user_id)[0][0]
+            #method send message for support 
+            await message_manager.support(client, message, sender_show_id)
+
         # Button for receive free coin
         if text == '🚸 معرفی به دوستان (سکه رایگان)': 
             #update time login 
