@@ -2,6 +2,16 @@ import re
 
 from search_user import SearchUsers
 from csv_manager import CSVManager
+from quesfuser import Response
+from datetimer import Time
+import random
+
+
+# Object response for question of users
+response = Response()
+# Object time for save time login 
+time  = Time()
+
 
 
 class MessageManager:
@@ -17,7 +27,13 @@ class MessageManager:
           show_id = re.search(pattern, message_caption).group(1)
 
           return 'user_' + show_id
+     
+     #fetch user id of text
+     def fetch_user_id_of_text(self, message_text):
+          pattern = r"#(\d+)"
+          user_id = re.search(pattern, message_text).group(1)
 
+          return user_id
     #manage message for send 
      async def manage_send_message(self, client, message, csv_manager, protect_content):
      
@@ -118,6 +134,103 @@ class MessageManager:
           await client.send_message(sender_chat_id, f'درخواست شمارو {point_caht_id}رد کرد')
           print(callback_query)
           await client.delete_messages(chat_id=point_caht_id, message_ids=callback_query.message.id)
-
-
+     
+     # ask question of user
+     async def ask_question(self, bot, message, value, basic_information, button=None):  
+          if button :
+               await message.reply_text(value, reply_markup=button)  
+          else:
+               await message.reply_text(value)   
+          answer= await response.respons_text(bot, message.chat.id)
+          value_resulte = answer.text
+          basic_information.append(value_resulte)
           
+     #get data profile of users
+     async def get_new_data_for_pro(self, bot,message):
+          # Basic information user during initial check-in
+          basic_information = [message.chat.id] 
+          await self.ask_question(bot, message, 'اسم', basic_information)#name question and save the name in the database
+          await self.ask_question(bot, message, 'سن', basic_information, self.button.menu_number())#age question
+
+          #province question
+          await message.reply_text('استان ؟', reply_markup=self.button.menu_provinces() )
+          answer = await response.respons_text(bot, message.chat.id)
+          province = answer.text
+          province_id = self.db_manager.fetch_province_id(province)
+          basic_information.append(province_id[0][0])
+
+          #city question
+          try: 
+               await message.reply_text('شهر ؟', reply_markup=self.button.menu_city(province))
+               answer = await response.respons_text(bot, message.chat.id)
+               city = answer.text
+               city_id = self.db_manager.fetch_city_id(city)
+               basic_information.append(city_id[0][0])
+          except :
+               new_city = []
+               new_city.append(city)
+               new_city.append(province_id[0][0])
+               self.db_manager.insert_new_city(new_city)
+               city_id = self.db_manager.fetch_city_id(city)
+               basic_information.append(city_id[0][0])
+
+          #gender question
+          await message.reply_text('جنسیت ؟', reply_markup=self.button.menu_gender())
+          answer = await response.respons_text(bot, message.chat.id)
+          gender = answer.text
+          if gender == 'دختر' :
+               gender = 1
+          else:
+               gender = 0
+          basic_information.append(gender)
+
+
+          #set Basic information during initial check-in
+          self.db_manager.insert_data_new_start(basic_information)
+          #set login time 
+          time.set_first_time_log(self.db_manager, message.chat.id)
+          
+          
+
+          #create show id for new user
+          try:
+               user_id =self.db_manager.fetch_user_id_of_users(message.chat.id)
+               show_id = 'user_' + str(message.chat.id)[:-4]
+               data = [show_id, user_id[0][0]]
+               self.db_manager.create_show_id(data)
+          except Exception as e:
+               #Duplicate show ID, a new sowh ID was created
+               random_char = ['@', '%', '*', '+', '$', '!']
+               x =show_id + str(random.choice(random_char))+'H'
+               print('Duplicate ID, a new ID was created error is : ', x)
+               
+          
+
+
+     async def send_anonymous_message(self, client, sender_chat_id, point_show_id):
+          #fetch user id sender user
+          sender_user_id = self.db_manager.fetch_user_id_of_users(sender_chat_id)[0][0]
+
+          #fetch chat id point user
+          point_user_id = self.db_manager.fetch_user_id_of_show_id(point_show_id)[0][0]
+          point_chat_id = self.db_manager.fetch_chat_id_of_user_id(point_user_id)[0][0]
+
+          #send message question to sender user
+          await client.send_message(sender_chat_id, 'پیام خود را بنویسید')
+          # question message of sender user 
+          value =await response.respons_text(client, sender_chat_id)
+          await client.send_message(sender_chat_id, '''
+                                     پیام شما با موفقیت ارسال شد             
+                `برای ارسال پیام دیگر روی لینک دوباره کلیک کنید`
+''')
+
+
+          await client.send_message(point_chat_id,f'''
+`پیام ناشناس دریافتی شما:`
+                                    
+{value.text}
+
+#{sender_user_id}
+''', reply_markup=self.button.menu_respons_to_anonymus())
+
+

@@ -38,7 +38,7 @@ class Profile:
             city_id = data_profile[0][3]
             biography = data_profile[0][4]
             gender = data_profile[0][5]
-            status = data_profile[0][6]
+            status = data_profile
             path_photo = data_profile[0][7]
 
             #list of province

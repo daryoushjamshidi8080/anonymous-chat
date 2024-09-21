@@ -4,3 +4,6 @@ app_api_hash = "fc393ce306361ef2bb938ec8d2aa84fc"
 bot_api_hash = "7500784866:AAG2vqpmZ5THxOZ66x7O6ZAWyBO6KYwVPaI"
 
 
+
+for i in range(10,0):
+    print(i)

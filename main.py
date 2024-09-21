@@ -70,7 +70,6 @@ dict_waiting_boy = {}
 is_waiting_for_photo = False
 #global variable for set chat id Profile changer
 photo_chat_id = None
-
 # A variable to store private chat status
 private_chats = []
 
@@ -82,86 +81,41 @@ private_chats = []
 csv_manager = CSVManager('/home/daryoush/Codes/chatAnonymous/connected_paris.csv')
 
 
+@bot.on_message(filters.command("anonymous"))
+async def handle_message(client, message):
+    print(message)
+
+
+
 #command start bot
 @bot.on_message(filters.command("start"))
 async def main(client, message):
+    # print(message.command[1])
 
     # Check if you already exist or not
     return_id = db_manager.fetch_chat_id(message.chat.id)
-    if return_id:
+    command_anonymous = message.command if len(message.command)!=1 else None
+    
+    #send message anonymus for  user
+    if return_id and  command_anonymous:
+        point_show_id = message.command[1] # show id point user
+        sender_chat_id = message.chat.id # chat id sender user
+
+        await message_manager.send_anonymous_message(client, sender_chat_id, point_show_id)
+    elif command_anonymous:
+        pass
+    #start bot  
+    elif return_id:
         await message.reply_text(f"""
                      برات چکار کنم حالا{return_id[0][0]} ؟
     `از منوی پایین 👇 انتخاب کن`
     """,reply_markup=Button.menu_start())
     else:
-        #Create new Accont
+        
+        #Create new Accont(start new bot)
         await message.reply_text(f"""☺️`سلام به پچ پچ چت خوش اومدی خودتو معرفی میکنی؟`""")    
+        await message_manager.get_new_data_for_pro(bot, message)
 
-        # Basic information user during initial check-in
-        basic_information = [message.chat.id]        #name question and save the name in the database
-        await message.reply_text('اسم ؟')    
-        answer= await response.respons_text(bot, message.chat.id)
-        name = answer.text
-        basic_information.append(name)
-
-        #age question
-        await message.reply_text('سن ؟', reply_markup=Button.menu_number())
-        answer = await response.respons_text(bot, message.chat.id)
-        age = answer.text
-        basic_information.append(age)
-
-        #province question
-        await message.reply_text('استان ؟', reply_markup=Button.menu_provinces() )
-        answer = await response.respons_text(bot, message.chat.id)
-        province = answer.text
-        province_id = db_manager.fetch_province_id(province)
-        basic_information.append(province_id[0][0])
-        
-        #city question
-        try: 
-            await message.reply_text('شهر ؟', reply_markup=Button.menu_city(province))
-            answer = await response.respons_text(bot, message.chat.id)
-            city = answer.text
-            city_id = db_manager.fetch_city_id(city)
-            basic_information.append(city_id[0][0])
-        except :
-            new_city = []
-            new_city.append(city)
-            new_city.append(province_id[0][0])
-            db_manager.insert_new_city(new_city)
-            city_id = db_manager.fetch_city_id(city)
-            basic_information.append(city_id[0][0])
-
-        #gender question
-        await message.reply_text('جنسیت ؟', reply_markup=Button.menu_gender())
-        answer = await response.respons_text(bot, message.chat.id)
-        gender = answer.text
-        if gender == 'دختر' :
-            gender = 1
-        else:
-            gender = 0
-        basic_information.append(gender)
-
-
-        #set Basic information during initial check-in
-        db_manager.insert_data_new_start(basic_information)
-        #set login time 
-        time.set_first_time_log(db_manager, message.chat.id)
-        
-        
-
-        #create show id for new user
-        try:
-            user_id =db_manager.fetch_user_id_of_users(message.chat.id)
-            show_id = 'user_' + str(message.chat.id)[:-4]
-            data = [show_id, user_id[0][0]]
-            db_manager.create_show_id(data)
-        except Exception as e:
-            #Duplicate show ID, a new sowh ID was created
-            random_char = ['@', '%', '*', '+', '$', '!']
-            x =show_id + str(random.choice(random_char))+'H'
-            print('Duplicate ID, a new ID was created error is : ', x)
-            
         
         #send Newly created profile to user
         await message.reply_text('profile', reply_markup=Button.menu_profile())
@@ -295,7 +249,16 @@ async def connect_chat_button(client, message):
         elif text == '📩 لینک ناشناس من':
             #update time login 
             time.update_time_login(db_manager, message.chat.id)
-            await message.reply_text("""anonymous link""")
+            user_id = db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
+            show_id = db_manager.fetch_show_id(user_id)[0][0]
+            # link anonymous
+            await message.reply_text(f'''
+                                     هر هرحرفی که تو دلت داری با این لینک ناشناس برام بگو
+
+                                     👇👇👇
+
+`https://t.me/PajPajbot?start={show_id}`
+''')
         
         # Bouttom for Communicate with the manager
         elif text == '📬 انتقادات و پیشنهادات':
@@ -647,12 +610,17 @@ async def hande_callback_query(client, callback_query):
 
         await message_manager.reject_request(client, callback_query, point_user_chat_id, callback_query.message.chat.id)
         
-
-
-    
+    #Reply to anonymous message
+    elif callback_query.data == 'responsanonymous':
+        point_user_id = int(message_manager.fetch_user_id_of_text(callback_query.message.text))
         
+        #fetch caht id of user id 
+        point_chat_id = db_manager.fetch_chat_id_of_user_id(point_user_id)[0][0]
 
+        # fetch show id point user
+        point_show_id = db_manager.fetch_show_id(point_user_id)[0][0]
 
-        
+        # method send message anonymous of class messsage menager 
+        await message_manager.send_anonymous_message(client, callback_query.message.chat.id, point_show_id)
 
 bot.run()

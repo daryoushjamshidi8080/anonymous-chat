@@ -437,3 +437,11 @@ class Button:
         )
         return inline_keyboard
     
+    # menu respons for sender anonymous message 
+    def menu_respons_to_anonymus(self):
+        inline_keyboard =InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton('پاسخ', 'responsanonymous')]
+            ]
+        )
+        return inline_keyboard
