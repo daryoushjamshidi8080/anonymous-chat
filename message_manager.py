@@ -140,13 +140,16 @@ class MessageManager:
           if button :
                await message.reply_text(value, reply_markup=button)  
           else:
-               await message.reply_text(value)   
+               await message.reply_text(value)
+          
           answer= await response.respons_text(bot, message.chat.id)
           value_resulte = answer.text
+          if value == 'سن':
+               value_resulte = int(value_resulte)
           basic_information.append(value_resulte)
           
      #get data profile of users
-     async def get_new_data_for_pro(self, bot,message):
+     async def get_new_data_for_pro(self, bot,message, age=None):
           # Basic information user during initial check-in
           basic_information = [message.chat.id] 
           await self.ask_question(bot, message, 'اسم', basic_information)#name question and save the name in the database
@@ -184,33 +187,49 @@ class MessageManager:
                gender = 0
           basic_information.append(gender)
 
+          if age == None:
+               #set Basic information during initial check-in
+               self.db_manager.insert_data_new_start(basic_information)
+          else:
+               chat_id = basic_information[0]
+               name = basic_information[1]
+               age = basic_information[2]
+               
+               province_id = basic_information[3]
+               city_id = basic_information[4]
+               self.db_manager.update_data_new_start(chat_id, name, age, gender, province_id, city_id)
+               # self.db_manager.insert_province_city(chat_id, province, city)
 
-          #set Basic information during initial check-in
-          self.db_manager.insert_data_new_start(basic_information)
           #set login time 
           time.set_first_time_log(self.db_manager, message.chat.id)
           
-          
-
-          #create show id for new user
           try:
-               user_id =self.db_manager.fetch_user_id_of_users(message.chat.id)
-               show_id = 'user_' + str(message.chat.id)[:-4]
+               #method create show id  for new user
+               self.create_show_id(message.chat.id)
+          except Exception as e:
+               print('ازقبل وجود دارد')
+          
+     #create show id for new user
+     def create_show_id(self, chat_id):
+          try:
+               user_id =self.db_manager.fetch_user_id_of_users(chat_id)
+               show_id = 'user_' + str(chat_id)[:-4]
                data = [show_id, user_id[0][0]]
                self.db_manager.create_show_id(data)
-          except Exception as e:
+          except Exception as e :
                #Duplicate show ID, a new sowh ID was created
                random_char = ['@', '%', '*', '+', '$', '!']
-               x =show_id + str(random.choice(random_char))+'H'
-               print('Duplicate ID, a new ID was created error is : ', x)
-               
-          
+               new_show_id =show_id + str(random.choice(random_char))+'H'
+               print(user_id)
+               data = [new_show_id,user_id[0][0]]
+               self.db_manager.create_show_id(data)
+               print('Duplicate ID, a new ID was created error is : ', new_show_id) 
 
 
      async def send_anonymous_message(self, client, sender_chat_id, point_show_id):
           #fetch user id sender user
           sender_user_id = self.db_manager.fetch_user_id_of_users(sender_chat_id)[0][0]
-
+          print(point_show_id)
           #fetch chat id point user
           point_user_id = self.db_manager.fetch_user_id_of_show_id(point_show_id)[0][0]
           point_chat_id = self.db_manager.fetch_chat_id_of_user_id(point_user_id)[0][0]

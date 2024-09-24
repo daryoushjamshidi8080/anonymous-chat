@@ -82,6 +82,17 @@ class DatabaseManager:
             print("error in  fetch city and city is ==> ",e)
         finally:
             self.close()
+    #insert data defulte to profile
+    def insert_data_defulte_profile(self, information):
+        try:
+            self.open()
+            self.cur.execute("INSERT INTO users (cach_id, firstname, age, gender) VALUES (%s, %s, %s, %s)", tuple(information))
+            self.conn.commit()#seting qeury to database
+        except Exception as e :
+            print(f"Error insert new user: {e}")
+            self.conn.rollback()#Remove half operations
+        finally:
+            self.close()
     #insert data During initial startup to users table 
     def insert_data_new_start(self, information):
         try:
@@ -93,7 +104,28 @@ class DatabaseManager:
             self.conn.rollback()#Remove half operations
         finally:
             self.close()
-
+    #updata data all profile
+    def update_data_new_start(self, chat_id, fistname, age, gender, province_id, city_id):
+        try:
+            self.open()
+            self.cur.execute("UPDATE users set firstname = %s, age = %s, gender=%s , province_id=%s, city_id=%s WHERE (cach_id = %s)", (fistname, age, gender, province_id, city_id, chat_id, ))        
+            self.conn.commit()
+        except Exception as e :
+            print("Error in update data profile is", e)
+            self.conn.rollback()
+        finally:
+            self.close()
+    #updata data all profile
+    def insert_province_city(self, chat_id, province, city ):
+        try:
+            self.open()
+            self.cur.execute("UPDATE users  SET province_id = %s, city_id=%s  WHERE cach_id =%s", (province, city, chat_id))
+            self.conn.commit()
+        except Exception as e :
+            print("Error in update data profile is", e)
+            self.conn.rollback()
+        finally:
+            self.close()
     #create show id 
     def create_show_id(self, data):
         try:
@@ -143,7 +175,6 @@ class DatabaseManager:
     def fetch_all_profile(self, chat_id=None, user_id=None):
         try:
             self.open()
-
             if chat_id is not None:
                 self.cur.execute("SELECT firstname, age, province_id, city_id, biography, gender, status, picture FROM users WHERE cach_id = %s", (chat_id,))
             elif user_id is not None:

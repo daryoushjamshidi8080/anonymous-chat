@@ -5,5 +5,8 @@ bot_api_hash = "7500784866:AAG2vqpmZ5THxOZ66x7O6ZAWyBO6KYwVPaI"
 
 
 
-for i in range(10,0):
-    print(i)
+
+x = [0,1,2,4]
+print(x.pop(0))
+x.append(0)
+print(x)
