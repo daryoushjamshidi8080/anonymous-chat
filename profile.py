@@ -38,7 +38,7 @@ class Profile:
             city_id = data_profile[0][3]
             biography = data_profile[0][4]
             gender = data_profile[0][5]
-            status = data_profile
+            status = data_profile[0][6]
             path_photo = data_profile[0][7]
 
             #list of province
@@ -83,28 +83,27 @@ class Profile:
             # fetch show id of database
             show_id = (db_manager.fetch_show_id(user_id))[0][0]
 
-            if not(status == 2 ):
+            if not( status == 1 ):
                 last_logout_time = (db_manager.fetch_last_login_time(user_id))[0][0]
                 time_status = time.time_difference_from_now(last_logout_time)
-                time_result = None
+            
                 if time_status[:3]== 'scd':
-                    status = 1
+                    status = 'آنلاین'
                 elif time_status[:3] == 'min':
                     if int(time_status[4:]) < 5 :
-                        status = 1
+                        status = 'آنلاین'
                     else:
-                        status = 0
-                    time_result = f'{time_status[4:]}دقیقه قبل انلاین بود'
+                        status = f'{time_status[4:]}دقیقه قبل انلاین بود'
                 elif time_status[:3] == 'hur' :
-                    status = 0
-                    time_result = f'{time_status[4:]}ساعت قبل انلاین بود'
+                    status = f'{time_status[4:]}ساعت قبل انلاین بود'
                 elif time_status[:3] == 'day' :
-                    status = 0
-                    time_result = f'{time_status[4:]}روز قبل انلاین بود'
+                    status = f'{time_status[4:]}روز قبل انلاین بود'
+            else :
+                status = "آنلاین(درحال چت)"
             
                 
             gender = 'پسر' if gender == 0 else 'دختر'
-            status = f'{time_result}' if status == 0 else 'آنلاین' if status == 1 else 'آنلاین(درحال چت)'
+            
             biography = biography or '!?'
             
 
@@ -143,3 +142,5 @@ class Profile:
             await message.reply_text(f'خطا در بارگذاری پروفایل: {e}')
 
 
+
+                

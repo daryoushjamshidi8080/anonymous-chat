@@ -504,7 +504,11 @@ class SearchUsers:
         # Connecting message to the user
         await client.send_message(user1, f"شما با کاربر {user2} متصل شدید.", reply_markup=button.menu_show_pro_end_caht_active())
         await client.send_message(user2, f"شما با کاربر {user1} متصل شدید.", reply_markup=button.menu_show_pro_end_caht_active())
-
+        
+        # add user status 
+        self.db_manager.add_status_user(1, user2)
+        self.db_manager.add_status_user(1, user1)
+       
 
      # Notifying the user that she is in the waiting queue
     async def notify_waiting(self, client, user):
