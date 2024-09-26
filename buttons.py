@@ -21,7 +21,7 @@ class Button:
             [
                 [InlineKeyboardButton('🎲جستجوی شانسی🎲', callback_data='chancesearch')],
                 [InlineKeyboardButton('👩‍🦰جستجوی دختر', callback_data='girlsearch'),InlineKeyboardButton('🧑جستجوی پسر', callback_data='boysearch') ],
-                [InlineKeyboardButton('جستجوی🌈', callback_data='lgbtsearch')],
+                # [InlineKeyboardButton('جستجوی🌈', callback_data='lgbtsearch')],
                 [InlineKeyboardButton('🏠جستجوی اطراف🏠', callback_data='homesearch')]
             ]
         )
