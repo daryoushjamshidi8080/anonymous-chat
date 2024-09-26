@@ -168,6 +168,8 @@ async def connect_chat_button(client, message):
         if message.text and message.text.startswith("/user_"):
             command_id = (message.text)[1:]
             fetch_prof_of_show_id = (db_manager.fetch_user_id_of_show_id(command_id))[0][0]
+            #update time login 
+            time.update_time_login(db_manager, chat_id=message.chat.id)
 
 
             await profile.profile_user(client, db_manager, message, Button, user_id = fetch_prof_of_show_id)
@@ -181,8 +183,8 @@ async def connect_chat_button(client, message):
                 # After saving the photo, return the mode to inactive mode
                 is_waiting_for_photo = False
                 photo_chat_id = None
-        
-
+                #update time login 
+                time.update_time_login(db_manager, chat_id=message.chat.id)
 
 
         text = message.text
@@ -205,6 +207,10 @@ async def connect_chat_button(client, message):
                 # await message.reply_text(f'{partner_id}')
                 await profile.profile_user(client, db_manager, message, Button, chat_id = partner_id)
                 await client.send_message(partner_id,'پروفایل شمارو مشاهده کرد')
+
+                #update time login 
+                time.update_time_login(db_manager, chat_id=message.chat.id)
+
                 
             elif text == 'فعال سازی چت خصوصی':
                 private_chats.append(message.chat.id)
@@ -225,21 +231,34 @@ async def connect_chat_button(client, message):
                     csv_manager.remove_chat_id_from_csv(message.chat.id)# remove chat id of csv file
                     csv_manager.remove_chat_id_from_csv(partner_id)# remove partner id of csv file
 
+                    #update time login 
+                    time.update_time_login(db_manager, chat_id=message.chat.id)
+
+                    #fetch user id of database in the users table / fetch show id of database id chat id table 
+                    sender_user_id = db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
+                    sender_show_id = db_manager.fetch_show_id(sender_user_id)[0][0]
+
+                    point_user_id = db_manager.fetch_user_id_of_users(partner_id)[0][0]
+                    point_show_id = db_manager.fetch_show_id(point_user_id)[0][0]
                     
 
                     # Notification to both users
-                    await client.send_message(message.chat.id, "بلاکش میکنی یا بعدا وصل میشی باز", reply_markup=Button.menu_block())
-                    user_answer = await response.respons_text(bot,message.chat.id )
-                    await client.send_message(message.chat.id, "چت شما با کاربر دیگر قطع شد.", reply_markup=Button.menu_start())
-                    await client.send_message(partner_id, "چت شما ازطریق پارتنرتون قطع شد.", reply_markup=Button.menu_start())
+                    await client.send_message(message.chat.id, f"""چت شما از طریف شما با کاربر
+                                              قطع شد  /{point_show_id}
+                                            `درصورت نیاز میتوانی بلاک کنی  دیگر به تو وصل نشه`
+""", reply_markup=Button.menu_start())
+                    
+                    #send notfication for point user
+                    await client.send_message(partner_id, f"""چت شما از طریف پارتنرتان با ایدی زیر
+                                              قطع شد  /{sender_show_id}
+                                            `درصورت نیاز میتوانی بلاک کنی  دیگر به تو وصل نشه`
+""", reply_markup=Button.menu_start())
+                    
                 else:
                     await message.reply_text("شما در حال حاضر با کسی متصل نیستید.",reply_markup=Button.menu_start())
 
                     
-                #add user to block list 
-                if user_answer.text == 'بلاک کن' :
-                    await block_user.block_user(message ,partnaer_chat_id=partner_id, user_chat_id=message.chat.id)
-
+                
                     
         elif not (message.text in ['🔗 به یه ناشناس وصلم کن!', '🚸 معرفی به دوستان (سکه رایگان)', '📬 انتقادات و پیشنهادات', '📩 لینک ناشناس من', '💰 سکه', '👤 پروفایل']):
             await message.reply_text(f"""
@@ -581,6 +600,7 @@ async def hande_callback_query(client, callback_query):
         text="باید چت قطع کنید برای استفاده از این بخش", 
         show_alert=True
         )
+        await callback_query.message.reply_text('ممنون از گزارش شما تیم پشتیبانی برسی میکنه')
             
 
     #block sender user direct
@@ -630,7 +650,8 @@ async def hande_callback_query(client, callback_query):
         #send notifiycation for user sender 
         if csv_manager.is_chat_in_csv(point_user_chat_id):
             await callback_query.answer(text=' درحال چت هست نمی توانید به شما وصل شود', show_alert= True)
-
+        elif csv_manager.is_chat_in_csv(callback_query.message.chat.id) :
+            await callback_query.answer(text=' درحال چت هستین نمی توانید به شما وصل شود', show_alert= True)
         else:
         
             await message_manager.accept_request_chat(client, callback_query.message.chat.id, point_user_chat_id)

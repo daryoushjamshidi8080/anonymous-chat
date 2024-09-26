@@ -418,15 +418,16 @@ class Button:
             ]
         )
         return inline_keyboard
+    
     # menu block next end chat 
     def menu_block(self):
-        inline_keyboard = ReplyKeyboardMarkup(
+        inline_keyboard = InlineKeyboardMarkup(
             [
-                ['بلاک کن'],
-                ['نه بعدا وصل میشم باز']
-            ],resize_keyboard=True
+                [InlineKeyboardButton('بلاک کن', 'blockpartnar'), InlineKeyboardButton('نه بعدا وصل میشم باز', 'notblockpartner')],
+            ]
         )
         return inline_keyboard
+    
     #menu request chat  for user
     def menu_request_chat(self):
         inline_keyboard = InlineKeyboardMarkup(
