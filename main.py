@@ -137,20 +137,30 @@ async def main(client, message):
         else:
             await message.reply_text(f"""☺️`سلام به پچ پچ چت خوش اومدی خودتو معرفی میکنی؟`""")   
 
-            #Create new Accont(start new bot) 
-
+        #Create new Accont(start new bot) 
+        try:
             await message_manager.get_new_data_for_pro(bot, message)
-
         
-        #send Newly created profile to user
-        await message.reply_text('profile', reply_markup=Button.menu_profile())
+            #send Newly created profile to user
+            await message.reply_text('profile', reply_markup=Button.menu_profile())
 
-        #Performance request from user 
-        await message.reply_text(f"""
-                    برات چکار کنم حالا؟
-    `از منوی پایین 👇 انتخاب کن`
-    """,reply_markup=Button.menu_start())
+            #Performance request from user 
+            await message.reply_text(f"""
+                برات چکار کنم حالا؟
+`از منوی پایین 👇 انتخاب کن`
+""",reply_markup=Button.menu_start())
+        except:
+            await message.reply_text('مشکل پیش اومد /start دوباره از اول برو ')
         
+        
+# command show my profile
+@bot.on_message(filters.command('myprofile'))
+async def my_profile(client, message):
+
+    #update time login 
+    time.update_time_login(db_manager, message.chat.id)
+    await profile.profile_user(client, db_manager, message, Button)
+
 
 
 
@@ -159,177 +169,188 @@ async def main(client, message):
 @bot.on_message(filters.text | filters.photo | filters.animation | filters.video | filters.sticker)
 async def connect_chat_button(client, message):
     global is_waiting_for_photo, photo_chat_id , private_chats, dict_waiting_all, dict_waiting_boy, dict_waiting_girl, dict_waiting_boy
+    
+    
+    try :
+        age_user = db_manager.fetch_all_profile(chat_id=message.chat.id)[0][1]
+    
+        
 
-    age_user = db_manager.fetch_all_profile(chat_id=message.chat.id)[0][1]
-
-
-    if age_user != 0 : 
-        # start commands /user for call user profile
-        if message.text and message.text.startswith("/user_"):
-            command_id = (message.text)[1:]
-            fetch_prof_of_show_id = (db_manager.fetch_user_id_of_show_id(command_id))[0][0]
-            #update time login 
-            time.update_time_login(db_manager, chat_id=message.chat.id)
-
-
-            await profile.profile_user(client, db_manager, message, Button, user_id = fetch_prof_of_show_id)
-        # Review photo submission pending for profile change
-        if is_waiting_for_photo and photo_chat_id == message.chat.id:
-            try:
-                await photo.save_photo(message, client, db_manager)
-            except Exception as e :
-                await message.reply_text(f'خطا در بارگزاری عکس{e}')
-            finally:
-                # After saving the photo, return the mode to inactive mode
-                is_waiting_for_photo = False
-                photo_chat_id = None
+        if age_user != 0 : 
+            # start commands /user for call user profile
+            if message.text and message.text.startswith("/user_"):
+                command_id = (message.text)[1:]
+                fetch_prof_of_show_id = (db_manager.fetch_user_id_of_show_id(command_id))[0][0]
                 #update time login 
                 time.update_time_login(db_manager, chat_id=message.chat.id)
 
 
-        text = message.text
-        # Check if the user is chatting or not
-        if csv_manager.is_chat_in_csv(message.chat.id) :
+                await profile.profile_user(client, db_manager, message, Button, user_id = fetch_prof_of_show_id)
+            # Review photo submission pending for profile change
+            if is_waiting_for_photo and photo_chat_id == message.chat.id:
+                try:
+                    await photo.save_photo(message, client, db_manager)
+                except Exception as e :
+                    await message.reply_text(f'خطا در بارگزاری عکس{e}')
+                finally:
+                    # After saving the photo, return the mode to inactive mode
+                    is_waiting_for_photo = False
+                    photo_chat_id = None
+                    #update time login 
+                    time.update_time_login(db_manager, chat_id=message.chat.id)
 
-            protect_content = False
-            if message.chat.id in private_chats:
-                protect_content = True
 
-            if message.text in ['پایان چت', 'فعال سازی چت خصوصی', 'نمایش پروفایل', 'غیرفعال سازی چت خصوصی']:
-                pass
-            else:
-                # manage send message user
-                await message_manager.manage_send_message(client, message, csv_manager, protect_content)
-            # buttons chating 
-            if text == 'نمایش پروفایل':
-                #search partner id of chat id is csv file
-                partner_id = csv_manager.search_partner_id(message.chat.id)
-                # await message.reply_text(f'{partner_id}')
-                await profile.profile_user(client, db_manager, message, Button, chat_id = partner_id)
-                await client.send_message(partner_id,'پروفایل شمارو مشاهده کرد')
+            text = message.text
+            # Check if the user is chatting or not
+            if csv_manager.is_chat_in_csv(message.chat.id) :
 
-                #update time login 
-                time.update_time_login(db_manager, chat_id=message.chat.id)
+                protect_content = False
+                if message.chat.id in private_chats:
+                    protect_content = True
 
-                
-            elif text == 'فعال سازی چت خصوصی':
-                private_chats.append(message.chat.id)
-                await client.send_message(message.chat.id, "چت خصوصی فعال شد. پیام‌ها محافظت می‌شوند.", reply_markup=Button.menu_show_pro_end_caht_inactive())
-            
-            elif text == 'غیرفعال سازی چت خصوصی':
-                private_chats.remove(message.chat.id)
-                await client.send_message(message.chat.id, 'چت خصوصی غیر فعال شد', reply_markup=Button.menu_show_pro_end_caht_active())
-
-            elif text == 'پایان چت':
-                if csv_manager.search_partner_id(message.chat.id):
-                    #search partner id of chat id in csv file
+                if message.text in ['پایان چت', 'فعال سازی چت خصوصی', 'نمایش پروفایل', 'غیرفعال سازی چت خصوصی']:
+                    pass
+                else:
+                    # manage send message user
+                    await message_manager.manage_send_message(client, message, csv_manager, protect_content)
+                # buttons chating 
+                if text == 'نمایش پروفایل':
+                    #search partner id of chat id is csv file
                     partner_id = csv_manager.search_partner_id(message.chat.id)
-                    #add user status to database (no chating)
-                    db_manager.add_status_user(0, message.chat.id)
-                    db_manager.add_status_user(0, partner_id)
-
-                    csv_manager.remove_chat_id_from_csv(message.chat.id)# remove chat id of csv file
-                    csv_manager.remove_chat_id_from_csv(partner_id)# remove partner id of csv file
+                    # await message.reply_text(f'{partner_id}')
+                    await profile.profile_user(client, db_manager, message, Button, chat_id = partner_id)
+                    await client.send_message(partner_id,'پروفایل شمارو مشاهده کرد')
 
                     #update time login 
                     time.update_time_login(db_manager, chat_id=message.chat.id)
 
-                    #fetch user id of database in the users table / fetch show id of database id chat id table 
-                    sender_user_id = db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
+                    
+                elif text == 'فعال سازی چت خصوصی':
+                    private_chats.append(message.chat.id)
+                    await client.send_message(message.chat.id, "چت خصوصی فعال شد. پیام‌ها محافظت می‌شوند.", reply_markup=Button.menu_show_pro_end_caht_inactive())
+                
+                elif text == 'غیرفعال سازی چت خصوصی':
+                    private_chats.remove(message.chat.id)
+                    await client.send_message(message.chat.id, 'چت خصوصی غیر فعال شد', reply_markup=Button.menu_show_pro_end_caht_active())
+
+                elif text == 'پایان چت':
+                    if csv_manager.search_partner_id(message.chat.id):
+                        #search partner id of chat id in csv file
+                        partner_id = csv_manager.search_partner_id(message.chat.id)
+                        #add user status to database (no chating)
+                        db_manager.add_status_user(0, message.chat.id)
+                        db_manager.add_status_user(0, partner_id)
+
+                        csv_manager.remove_chat_id_from_csv(message.chat.id)# remove chat id of csv file
+                        csv_manager.remove_chat_id_from_csv(partner_id)# remove partner id of csv file
+
+                        #update time login 
+                        time.update_time_login(db_manager, chat_id=message.chat.id)
+
+                        #fetch user id of database in the users table / fetch show id of database id chat id table 
+                        sender_user_id = db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
+                        sender_show_id = db_manager.fetch_show_id(sender_user_id)[0][0]
+
+                        point_user_id = db_manager.fetch_user_id_of_users(partner_id)[0][0]
+                        point_show_id = db_manager.fetch_show_id(point_user_id)[0][0]
+                        
+
+                        # Notification to both users
+                        await client.send_message(message.chat.id, f"""
+                                                
+
+    چت از طرف شما با کاربر  /{point_show_id}  قطع شد 
+    `در صورت نیاز میتوانید بلاک کنید`
+
+
+    """, reply_markup=Button.menu_start())
+                        
+                        #send notfication for point user
+                        await client.send_message(partner_id, f"""
+                                                
+
+    چت از طرف کاربر مقابل با ایدی /{point_show_id}   قطع شد 
+    `در صورت نیاز میتوانید بلاک کنید` 
+
+
+    """, reply_markup=Button.menu_start())
+                        
+                    else:
+                        await message.reply_text("شما در حال حاضر با کسی متصل نیستید.",reply_markup=Button.menu_start())
+
+                        
+                    
+                        
+            elif not (message.text in ['🔗 به یه ناشناس وصلم کن!', '🚸 معرفی به دوستان (سکه رایگان)', '📬 انتقادات و پیشنهادات', '📩 لینک ناشناس من', '💰 سکه', '👤 پروفایل']):
+                await message.reply_text(f"""
+            `از منوی پایین 👇 انتخاب کن`
+            """,reply_markup=Button.menu_start())
+            else:
+
+                # Buttom chance connection
+                if message.text == '🔗 به یه ناشناس وصلم کن!':
+                    #update time login 
+                    time.update_time_login(db_manager, chat_id=message.chat.id)
+                    await message.reply_text("""
+                                    به کی وصلت کنم؟`👇انتخابکن`
+            """,reply_markup=Button.menu_chatـrequest())
+                
+                text = message.text
+
+                # Buttom display for profile 
+                if text == '👤 پروفایل':
+                    #update time login 
+                    time.update_time_login(db_manager, message.chat.id)
+
+                    await profile.profile_user(client, db_manager, message, Button)
+
+
+                if text == '💰 سکه':
+                    #update time login 
+                    time.update_time_login(db_manager, message.chat.id)
+                    await message.reply_text("""
+                            فعلا به سکه نیاز نداری برو حالشو ببر ☺️😋
+            """)
+                    
+                
+                # Buttom receive for anonymous message 
+                elif text == '📩 لینک ناشناس من':
+                    #update time login 
+                    time.update_time_login(db_manager, message.chat.id)
+                    user_id = db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
+                    show_id = db_manager.fetch_show_id(user_id)[0][0]
+                    # link anonymous
+                    await message.reply_text(f'''
+                                            هر هرحرفی که تو دلت داری با این لینک ناشناس برام بگو
+
+                                            👇👇👇
+
+        `https://t.me/PajPajbot?start={show_id}`
+        ''')
+                
+                # Bouttom for Communicate with the manager
+                elif text == '📬 انتقادات و پیشنهادات':
+                    #update time login 
+                    time.update_time_login(db_manager, message.chat.id)
+
+                    #fetch show id sender 
+                    sender_user_id =db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
                     sender_show_id = db_manager.fetch_show_id(sender_user_id)[0][0]
+                    #method send message for support 
+                    await message_manager.support(client, message, sender_show_id)
 
-                    point_user_id = db_manager.fetch_user_id_of_users(partner_id)[0][0]
-                    point_show_id = db_manager.fetch_show_id(point_user_id)[0][0]
-                    
-
-                    # Notification to both users
-                    await client.send_message(message.chat.id, f"""چت شما از طریف شما با کاربر
-                                              قطع شد  /{point_show_id}
-                                            `درصورت نیاز میتوانی بلاک کنی  دیگر به تو وصل نشه`
-""", reply_markup=Button.menu_start())
-                    
-                    #send notfication for point user
-                    await client.send_message(partner_id, f"""چت شما از طریف پارتنرتان با ایدی زیر
-                                              قطع شد  /{sender_show_id}
-                                            `درصورت نیاز میتوانی بلاک کنی  دیگر به تو وصل نشه`
-""", reply_markup=Button.menu_start())
-                    
-                else:
-                    await message.reply_text("شما در حال حاضر با کسی متصل نیستید.",reply_markup=Button.menu_start())
-
-                    
-                
-                    
-        elif not (message.text in ['🔗 به یه ناشناس وصلم کن!', '🚸 معرفی به دوستان (سکه رایگان)', '📬 انتقادات و پیشنهادات', '📩 لینک ناشناس من', '💰 سکه', '👤 پروفایل']):
-            await message.reply_text(f"""
-        `از منوی پایین 👇 انتخاب کن`
-        """,reply_markup=Button.menu_start())
+                # Button for receive free coin
+                if text == '🚸 معرفی به دوستان (سکه رایگان)': 
+                    #update time login 
+                    time.update_time_login(db_manager, message.chat.id)  
+                    await message.reply_text('به زودی...')
         else:
-
-            # Buttom chance connection
-            if message.text == '🔗 به یه ناشناس وصلم کن!':
-                #update time login 
-                time.update_time_login(db_manager, chat_id=message.chat.id)
-                await message.reply_text("""
-                                به کی وصلت کنم؟`👇انتخابکن`
-        """,reply_markup=Button.menu_chatـrequest())
-            
-            text = message.text
-
-            # Buttom display for profile 
-            if text == '👤 پروفایل':
-                #update time login 
-                time.update_time_login(db_manager, message.chat.id)
-
-                await profile.profile_user(client, db_manager, message, Button)
-
-
-            if text == '💰 سکه':
-                #update time login 
-                time.update_time_login(db_manager, message.chat.id)
-                await message.reply_text("""
-                        فعلا به سکه نیاز نداری برو حالشو ببر ☺️😋
-        """)
-                
-            
-            # Buttom receive for anonymous message 
-            elif text == '📩 لینک ناشناس من':
-                #update time login 
-                time.update_time_login(db_manager, message.chat.id)
-                user_id = db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
-                show_id = db_manager.fetch_show_id(user_id)[0][0]
-                # link anonymous
-                await message.reply_text(f'''
-                                        هر هرحرفی که تو دلت داری با این لینک ناشناس برام بگو
-
-                                        👇👇👇
-
-    `https://t.me/PajPajbot?start={show_id}`
+            await message.reply_text('''
+                                    بایدپروفایل خود تکمیل کنید
+                                    `برای تکمیل پروفایل خود` /start `کلیک کنید `
     ''')
-            
-            # Bouttom for Communicate with the manager
-            elif text == '📬 انتقادات و پیشنهادات':
-                #update time login 
-                time.update_time_login(db_manager, message.chat.id)
-
-                #fetch show id sender 
-                sender_user_id =db_manager.fetch_user_id_of_users(message.chat.id)[0][0]
-                sender_show_id = db_manager.fetch_show_id(sender_user_id)[0][0]
-                #method send message for support 
-                await message_manager.support(client, message, sender_show_id)
-
-            # Button for receive free coin
-            if text == '🚸 معرفی به دوستان (سکه رایگان)': 
-                #update time login 
-                time.update_time_login(db_manager, message.chat.id)  
-                await message.reply_text('به زودی...')
-    else:
-        await message.reply_text('''
-                                 بایدپروفایل خود تکمیل کنید
-                                 `برای تکمیل پروفایل خود` /start `کلیک کنید `
-''')
-
-
+    except: 
+        await message.reply_text('مشکل پیش اومد /start دوباره از اول برو ')
 
 
 
