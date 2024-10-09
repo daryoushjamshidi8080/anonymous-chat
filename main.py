@@ -440,6 +440,12 @@ async def hande_callback_query(client, callback_query):
         await callback_query.message.reply_text('سن جدید را بفرستید از منوی پایین',reply_markup=Button.menu_number())
         resulte_response = await response.respons_text(bot, chat_id)
         new_age =resulte_response.text
+        if not new_age.isdigit():
+            await calback_query.message.reply_text("سن حتما باید عدد باشه")
+            return
+        if 68 < int(new_age) < 10:
+            await callback_query.message.reply_text("فرمت ارسالی نادرست میباشد")
+            return
         db_manager.edit_all_profile(age=new_age, chat_id=chat_id)
         await callback_query.message.reply_text('سن شما با موفقیت تغییر یافت', reply_markup=Button.menu_start())
 
